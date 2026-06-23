@@ -201,11 +201,93 @@
   <xacro:leg prefix="lh" px="${-hip_x}" py="${ hip_y}" ydir="1"/>
   <xacro:leg prefix="rh" px="${-hip_x}" py="${-hip_y}" ydir="-1"/>
 
-  <!-- NOTE: No ros2_control / gazebo_ros2_control block here on purpose.
-       The CHAMP setup assistant only needs the kinematic chain (links + joints)
-       from robot_description, and CHAMP generates its own controllers and
-       gazebo bringup later. The old gazebo_ros2_control plugin (which pointed
-       at $(find quadbot_nodes)/config/...) was removed because that package
-       does not exist in this workspace and it broke xacro expansion. -->
+  <!-- ===================================================================== -->
+  <!-- CHAMP / Gazebo integration (mirrors chvmp go2_description/xacro).      -->
+  <!--                                                                        -->
+  <!-- The CHAMP setup assistant only needs the kinematic chain above; this   -->
+  <!-- section is purely for running the robot in Gazebo Classic under the    -->
+  <!-- CHAMP controller. It is wired for the EFFORT controller that           -->
+  <!-- champ_gazebo loads (joint_group_effort_controller), and the PID gains  -->
+  <!-- live in quadbot_config/config/ros_control/ros_control.yaml.            -->
+  <!-- ===================================================================== -->
+
+  <!-- ros2_control hardware: gazebo_ros2_control GazeboSystem, EFFORT command -->
+  <xacro:macro name="leg_ctrl" params="prefix">
+    <joint name="${prefix}_hip_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="${prefix}_upper_leg_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="${prefix}_lower_leg_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </xacro:macro>
+
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <xacro:leg_ctrl prefix="lf"/>
+    <xacro:leg_ctrl prefix="rf"/>
+    <xacro:leg_ctrl prefix="lh"/>
+    <xacro:leg_ctrl prefix="rh"/>
+  </ros2_control>
+
+  <!-- controller_manager + controller params (loaded by the plugin below) -->
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>$(find quadbot_config)/config/ros_control/ros_control.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+  <!-- ground-truth odometry (champ state estimation / robot_localization) -->
+  <gazebo>
+    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <ros>
+        <remapping>odom:=odom/ground_truth</remapping>
+      </ros>
+      <body_name>base_link</body_name>
+      <frame_name>world</frame_name>
+      <update_rate>10.0</update_rate>
+      <gaussian_noise>0.01</gaussian_noise>
+    </plugin>
+  </gazebo>
+
+  <!-- IMU link + sensor (feeds champ state estimation) -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.001"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>imu</namespace>
+          <remapping>~/out:=data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
 
 </robot>

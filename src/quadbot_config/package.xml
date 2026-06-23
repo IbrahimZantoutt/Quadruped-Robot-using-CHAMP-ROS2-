@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>quadbot_config</name>
+  <version>0.1.0</version>
+  <description>CHAMP config package for the quadbot quadruped (links/joints/gait/ros_control + launch). Modeled on chvmp go2_config.</description>
+
+  <maintainer email="ibrahimzantout5@gmail.com">Ibrahim Zantout</maintainer>
+  <author>Ibrahim Zantout</author>
+
+  <license>BSD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>launch_ros</build_depend>
+
+  <!-- runtime: the CHAMP stack this config drives, plus the robot description -->
+  <exec_depend>champ_base</exec_depend>
+  <exec_depend>champ_bringup</exec_depend>
+  <exec_depend>champ_gazebo</exec_depend>
+  <exec_depend>champbot_nodes</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
