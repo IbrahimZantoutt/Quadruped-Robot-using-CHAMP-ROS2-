@@ -186,8 +186,8 @@
       <mu1>1.2</mu1>
       <mu2>1.2</mu2>
       <kp>100000.0</kp>
-      <kd>1.0</kd>
-      <minDepth>0.001</minDepth>
+      <kd>2.0</kd>
+      <minDepth>0.002</minDepth>
     </gazebo>
   </xacro:macro>
 
