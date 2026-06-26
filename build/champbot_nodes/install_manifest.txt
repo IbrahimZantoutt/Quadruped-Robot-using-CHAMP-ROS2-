@@ -3,6 +3,7 @@
 /home/ibrahim/ChampQuadbot/install/champbot_nodes/share/champbot_nodes/launch/display.launch.py
 /home/ibrahim/ChampQuadbot/install/champbot_nodes/share/champbot_nodes/launch/gazebo.launch.py
 /home/ibrahim/ChampQuadbot/install/champbot_nodes/share/champbot_nodes/urdf/robot.urdf.xacro
+/home/ibrahim/ChampQuadbot/install/champbot_nodes/share/champbot_nodes/urdf/robot_no_lidar_viz.urdf.xacro
 /home/ibrahim/ChampQuadbot/install/champbot_nodes/share/champbot_nodes/rviz/model.rviz
 /home/ibrahim/ChampQuadbot/install/champbot_nodes/share/champbot_nodes/worlds/world.sdf
 /home/ibrahim/ChampQuadbot/install/champbot_nodes/share/ament_index/resource_index/package_run_dependencies/champbot_nodes

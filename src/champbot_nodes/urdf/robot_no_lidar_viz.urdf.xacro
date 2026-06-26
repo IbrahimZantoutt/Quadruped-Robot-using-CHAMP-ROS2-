@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- Same robot as robot.urdf.xacro, but with the Gazebo lidar's blue scan-ray
+     visualization turned OFF. Used by the "open world" launch
+     (gazebo_open.launch.py). It just pre-sets the `lidar_visualize` property
+     to false, then pulls in the full robot definition (which uses that property
+     for the lidar <visualize> tag, defaulting to true everywhere else). -->
+<robot name="quadbot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:property name="lidar_visualize" value="false"/>
+  <xacro:include filename="$(find champbot_nodes)/urdf/robot.urdf.xacro"/>
+</robot>

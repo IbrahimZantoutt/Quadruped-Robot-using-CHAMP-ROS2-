@@ -1,9 +1,12 @@
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/launch/bringup.launch.py
+/home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/launch/gazebo_open.launch.py
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/launch/gazebo_rviz.launch.py
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/launch/gazebo.launch.py
+/home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/launch/nav2.launch.py
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/config/joints/joints.yaml
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/config/links/links.yaml
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/config/autonomy/slam.yaml
+/home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/config/autonomy/navigation.yaml
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/config/gait/gait.yaml
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/config/ros_control/ros_control.yaml
 /home/ibrahim/ChampQuadbot/install/quadbot_config/share/quadbot_config/rviz/quadbot.rviz
