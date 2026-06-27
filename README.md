@@ -8,6 +8,11 @@ Click a goal in RViz → the robot plans a path and walks there, building a map 
 
 ---
 
+## Visualization
+
+<img width="672" height="360" alt="quadbotmovement-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/8583b27f-c73b-4dae-baf0-3273d485b66e" />
+
+
 ## What's in it
 
 - **Custom quadruped** — 12 DOF (4 legs × hip/upper/lower), hand-modeled URDF, effort-controlled.
