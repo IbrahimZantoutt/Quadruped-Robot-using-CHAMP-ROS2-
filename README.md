@@ -12,6 +12,9 @@ Click a goal in RViz → the robot plans a path and walks there, building a map 
 
 <img width="672" height="360" alt="quadbotmovement-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/8583b27f-c73b-4dae-baf0-3273d485b66e" />
 
+<img width="574" height="484" alt="quad_map-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/db5e9237-4f84-4e6b-b46e-d48d2f32fff6" />
+
+
 
 ## What's in it
 
