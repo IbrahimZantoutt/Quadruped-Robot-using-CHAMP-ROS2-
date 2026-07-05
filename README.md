@@ -1,173 +1,247 @@
-# ChampQuadbot
+<div align="center">
 
-A ROS 2 Humble simulation of a custom 12-DOF quadruped (**"quadbot"**) driven by the
-[CHAMP](https://github.com/chvmp/champ) locomotion controller, with SLAM and Nav2 for
-autonomous point-to-point navigation in Gazebo Classic.
+# ChampQuadbot — Autonomous 12-DOF Quadruped
 
-Click a goal in RViz → the robot plans a path and walks there, building a map as it goes.
+**Point-to-point navigation for a custom quadruped in ROS 2 & Gazebo, driven by the CHAMP locomotion controller with SLAM and Nav2.**
+
+A hand-modeled 12-DOF quadruped walks itself to any goal you click in RViz — CHAMP generates the gait, slam_toolbox builds the map as it explores, and Nav2 plans a **collision-free** path through a cluttered apartment.
+
+![ROS 2](https://img.shields.io/badge/ROS_2-Humble-22314E?logo=ros&logoColor=white)
+![Gazebo](https://img.shields.io/badge/Gazebo-Classic-FF6C2C?logo=gazebo&logoColor=white)
+![Nav2](https://img.shields.io/badge/Nav2-Navigation-2E7D32)
+![slam_toolbox](https://img.shields.io/badge/slam__toolbox-Mapping-1565C0)
+![CHAMP](https://img.shields.io/badge/CHAMP-Locomotion-6A1B9A)
+![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)
+
+</div>
 
 ---
 
-## Visualization
+## Demo
 
-<img width="672" height="360" alt="quadbotmovement-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/8583b27f-c73b-4dae-baf0-3273d485b66e" />
+<div align="center">
 
-<img width="574" height="484" alt="quad_map-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/db5e9237-4f84-4e6b-b46e-d48d2f32fff6" />
+### Autonomous navigation — click a goal, the quadbot walks there
 
+<img width="80%" alt="Quadbot navigating to a Nav2 goal in Gazebo" src="https://github.com/user-attachments/assets/8583b27f-c73b-4dae-baf0-3273d485b66e" />
 
+</div>
 
-## What's in it
+<table>
+<tr>
+<td width="50%" align="center">
 
-- **Custom quadruped** — 12 DOF (4 legs × hip/upper/lower), hand-modeled URDF, effort-controlled.
-- **CHAMP controller** — header-only IK/gait core + `champ_base` rclcpp nodes generate the gait.
-- **Gazebo Classic** simulation with `gazebo_ros2_control` (effort joint trajectory controller).
-- **slam_toolbox** — live 2D mapping from a simulated lidar (`/scan`).
-- **Nav2** — global/local planning + control; navigate by clicking a goal in RViz.
+### Live SLAM mapping while walking
 
-## Stack / dependencies
+<img width="100%" alt="slam_toolbox building the map as the quadbot explores" src="https://github.com/user-attachments/assets/db5e9237-4f84-4e6b-b46e-d48d2f32fff6" />
 
-| Piece | Used for |
+</td>
+<td width="50%" align="center">
+
+### Quadbot URDF model
+
+<!-- Paste a screenshot of the Quadbot URDF (RViz RobotModel) here — drag-drop the file into GitHub's editor to get the <img ... /> tag. -->
+<img width="100%" alt="12-DOF quadbot URDF in RViz" src="PASTE_URDF_IMAGE_URL_HERE" />
+
+</td>
+</tr>
+</table>
+
+---
+
+## Highlights
+
+- **No pre-built map** — slam_toolbox maps the apartment live from a simulated lidar while the robot drives; the `/map` grows as it explores.
+- **Click-to-walk autonomy** — a Nav2 goal in RViz becomes a `/cmd_vel` stream that CHAMP turns into a quadruped gait, so the robot plans a path and physically walks it.
+- **Real collision avoidance** — Nav2's global/local costmaps keep every trajectory clear of walls and clutter in a tight apartment world.
+- **Hand-written robot config** — CHAMP's setup assistant is ROS 1 only, so the full per-robot config (links, joints, gait, `ros2_control`) was authored by hand.
+- **Tuned for stability** — a wide body, a joint-velocity governor, and soft foot contact were dialed in to stop the legs whipping and the body tipping at speed.
+
+---
+
+## How It Works
+
+```
+  RViz "Nav2 Goal"            Keyboard teleop
+        │                          │
+        ▼                          │
+  Nav2 (planner · controller       │
+       · costmaps · BT)            │
+        │  /cmd_vel_nav            │
+        ▼                          ▼
+  velocity_smoother ─────────►  /cmd_vel
+                                   │
+                                   ▼
+              CHAMP controller (quadruped_controller_node)
+               • gait generator + body IK  →  12 joint targets
+                                   │
+                                   ▼
+              ros2_control (effort joint_trajectory_controller)
+                                   │
+                                   ▼
+        Gazebo Classic  (gazebo_ros2_control · physics · lidar)
+                    │  /scan · /joint_states · /odom/ground_truth
+                    ▼
+   state_estimation + EKF ×2  ──►  odom→base_footprint→base_link
+                    │
+                    ▼
+        slam_toolbox  ──►  /map  +  map→odom   (consumed by Nav2)
+```
+
+**1. Command —** motion comes from one of two sources: a **Nav2 Goal** clicked in RViz (planned through the costmaps) or **keyboard teleop**. Both resolve to a single `/cmd_vel` twist.
+
+**2. Gait —** the CHAMP controller (`quadruped_controller_node`) runs a header-only gait generator + body IK to convert that twist into targets for all 12 joints (4 legs × hip / upper / lower).
+
+**3. Control + sim —** an effort `joint_trajectory_controller` (via `ros2_control` / `gazebo_ros2_control`) drives the joints inside **Gazebo Classic**, which publishes lidar `/scan`, `/joint_states`, and ground-truth odometry.
+
+**4. Estimation —** two `robot_localization` EKFs fuse odometry into the `odom→base_footprint→base_link` transform tree.
+
+**5. Mapping + planning —** `slam_toolbox` builds `/map` and provides `map→odom` online (no map_server / AMCL); Nav2 uses only the navigation servers, planning fresh into not-yet-mapped space as the map fills in.
+
+---
+
+## Tech Stack
+
+| Layer | Tools / Libraries |
 |---|---|
-| ROS 2 **Humble** | base |
-| **Gazebo Classic** (`gazebo_ros`, `gazebo_ros2_control`) | physics sim + spawn + controllers |
-| **ros2_control** (`joint_trajectory_controller`, effort interface) | joint control |
-| **slam_toolbox** | online async SLAM → `map`, `map→odom`, `/map` |
-| **Nav2** (`nav2_bringup`, DWB, NavFn, costmap_2d, bt_navigator) | navigation |
-| **robot_localization** (EKF ×2) | `odom→base_footprint→base_link` |
-| **RViz2** | visualization + Nav2 Goal tool |
+| **Middleware** | ROS 2 **Humble** (`rclcpp`, launch) |
+| **Locomotion** | **CHAMP** (`champ`, `champ_base` — header-only IK + gait core) |
+| **Simulation** | **Gazebo Classic** (`gazebo_ros`, `gazebo_ros2_control`) |
+| **Joint control** | **ros2_control** (`joint_trajectory_controller`, effort interface) |
+| **Mapping** | **slam_toolbox** (online async SLAM) |
+| **Navigation** | **Nav2** (`nav2_bringup`, NavFn, DWB, `costmap_2d`, `bt_navigator`) |
+| **State estimation** | **robot_localization** (EKF ×2) |
+| **Robot model** | URDF / Xacro (12-DOF quadruped + lidar) |
+| **Visualization** | **RViz2** + Nav2 Goal tool |
+| **Language / build** | C++17, `colcon`, `ament_cmake` |
 
-External vendored sources (in `src/`): `chvmp/champ` (ros2 branch) and `champ_teleop`.
+Vendored sources (in `src/`): [`chvmp/champ`](https://github.com/chvmp/champ) (ros2 branch) and `champ_teleop`.
 
-## Packages
+---
+
+## Repository Layout
 
 ```
 src/
 ├── champ/            # vendored CHAMP (controller core, champ_base, champ_gazebo, ...)
 ├── champ_teleop/     # keyboard teleop (publishes /cmd_vel)
 ├── champbot_nodes/   # robot description: urdf/, worlds/, rviz/, launch/
-└── quadbot_config/   # the per-robot config + launch (this is where most work lives)
+└── quadbot_config/   # per-robot config + launch (where most of the work lives)
     ├── config/
-    │   ├── gait/joints/links/ros_control/   # CHAMP + ros2_control params
-    │   └── autonomy/                         # slam.yaml, navigation.yaml
+    │   ├── gait / joints / links / ros_control /   # CHAMP + ros2_control params
+    │   └── autonomy/                               # slam.yaml, navigation.yaml
     └── launch/
-        ├── bringup.launch.py     # CHAMP controller only (real robot / controller half)
+        ├── bringup.launch.py     # CHAMP controller only (real-robot / controller half)
         ├── gazebo.launch.py      # Gazebo (world.sdf) + robot + CHAMP
         ├── gazebo_rviz.launch.py # ^ + RViz + SLAM (slam:=true) + Nav2 (nav2:=true)
         ├── gazebo_open.launch.py # empty world, lidar rays hidden
         └── nav2.launch.py        # Nav2 servers only
 ```
 
-> **Why config is hand-written:** CHAMP's setup assistant is ROS 1 only, so the
-> per-robot config (links/joints/gait/ros_control) was written by hand, modeled on
+> **Why the config is hand-written:** CHAMP's setup assistant is ROS 1 only, so the
+> per-robot config was written by hand, modeled on
 > [`anujjain-dev/unitree-go2-ros2`](https://github.com/anujjain-dev/unitree-go2-ros2).
 > The quadbot's link/joint names match CHAMP convention 1:1 (`lf/rf/lh/rh` +
-> `hip/upper_leg/lower_leg/foot`), so `links.yaml`/`joints.yaml` are name maps only.
+> `hip/upper_leg/lower_leg/foot`), so `links.yaml` / `joints.yaml` are name maps only.
 
 ---
 
-## Quick start
+## Getting Started
+
+### Prerequisites
+- Ubuntu 22.04 + **ROS 2 Humble**
+- **Gazebo Classic**, Nav2, slam_toolbox, and `ros2_control` / `gazebo_ros2_control`
 
 ```bash
-# build
-cd ~/ChampQuadbot
+sudo apt install ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros2-control \
+  ros-humble-ros2-control ros-humble-ros2-controllers \
+  ros-humble-nav2-bringup ros-humble-slam-toolbox ros-humble-robot-localization
+```
+
+### Build
+
+```bash
+git clone https://github.com/IbrahimZantoutt/ChampQuadbot.git
+cd ChampQuadbot
 colcon build
 source install/setup.bash
+```
 
+### Run
+
+```bash
 # full sim: Gazebo + CHAMP + RViz + SLAM + Nav2
 ros2 launch quadbot_config gazebo_rviz.launch.py
 ```
 
-**On WSL2, prefer headless Gazebo** (the Gazebo GUI is unreliable here — see below):
+Then in RViz, click **"Nav2 Goal"** in the toolbar and click a destination on the map — the
+robot plans a path (green) and walks to it, mapping as it goes. To drive it manually instead:
 
 ```bash
-ros2 launch quadbot_config gazebo_rviz.launch.py gui:=false
+ros2 run champ_teleop champ_teleop.py    # focus this terminal, then use i/j/l/k/u/o/m
 ```
 
-### Tutorial — drive it
+> **On WSL2, run headless.** The Gazebo GUI (gzclient) is unreliable here — work in RViz with
+> `gui:=false` (see [Challenges](#challenges--lessons-learned)):
+> ```bash
+> ros2 launch quadbot_config gazebo_rviz.launch.py gui:=false
+> ```
 
-1. **Teleop (manual):** in another terminal,
-   ```bash
-   ros2 run champ_teleop champ_teleop.py
-   ```
-   Click that terminal and use `i/j/l/k/u/o/m`. (Teleop only reads keys from its own
-   focused terminal.)
-
-2. **Autonomous (Nav2):** in RViz, click **"Nav2 Goal"** in the toolbar, then click a
-   destination on the map. The robot plans a path (green) and walks to it. Costmaps and
-   the path show up in RViz; the gray `/map` grows as you explore.
-
-### Useful launch args (`gazebo_rviz.launch.py`)
-
-| arg | default | effect |
-|---|---|---|
-| `gui` | `true` | `gui:=false` runs Gazebo headless (no gzclient window) — **recommended on WSL2** |
-| `rviz` | `true` | RViz on/off |
-| `slam` | `true` | slam_toolbox on/off |
-| `nav2` | `true` | Nav2 stack on/off |
-
-### Other launches
+**Launch args (`gazebo_rviz.launch.py`):** `gui` (`false` = headless, recommended on WSL2),
+`rviz`, `slam`, `nav2` — each `true` by default. Other entry points:
 
 ```bash
 ros2 launch quadbot_config gazebo_open.launch.py   # empty world, lidar rays hidden
-ros2 launch quadbot_config gazebo.launch.py         # Gazebo + CHAMP only (no RViz/SLAM/Nav2)
+ros2 launch quadbot_config gazebo.launch.py        # Gazebo + CHAMP only (no RViz/SLAM/Nav2)
 ```
 
 ---
 
-## Problems faced & solved
+## Challenges & Lessons Learned
 
-Lessons from building this (kept here so they aren't re-derived). More detail lives in the
-project memory under `.claude/projects/.../memory/`.
+The hard-won lessons from building this — kept here so they aren't re-derived.
 
-### Locomotion / stability (Gazebo)
-- **Joint velocity limit is the smoothness governor.** Lowering joint `velocity` to ~1.5
-  (with effort ~25) stopped the legs from whipping/"getting excited" — the single biggest
-  smoothness win. High limits = jerky gait, worst during forward motion.
+### Locomotion & stability (Gazebo)
+- **Joint velocity limit is the smoothness governor.** Lowering joint `velocity` to ~1.5 (with
+  effort ~25) stopped the legs whipping/"getting excited" — the single biggest smoothness win.
+  High limits = jerky gait, worst during forward motion.
 - **A wide body gives passive stability.** Body is `0.50 × 0.26 × 0.08`, 3 kg. Widening
-  0.18→0.26 nearly doubled roll inertia and stopped tipping at speed + idle drift. *Do not*
-  revert to a narrow body.
-- **Going lighter destabilizes** (PID/inertia limited). To lighten, widen for inertia
-  instead of dropping mass.
-- **`nominal_height ≈ 0.22` is the sweet spot** — higher (0.25) is crisp but slides when
-  idle; lower (0.18) is planted but laggy.
-- **Joint damping 0.2** holds idle best (0.0 shakes, 0.4 drifts).
-- Foot contact must stay soft (`mu 1.2 / kp 1e5 / kd 2.0`); the reference's stiff values
+  0.18→0.26 nearly doubled roll inertia and stopped tipping at speed + idle drift. Don't revert
+  to a narrow body; to lighten, widen for inertia rather than dropping mass.
+- **`nominal_height ≈ 0.22` is the sweet spot** — higher (0.25) is crisp but slides when idle;
+  lower (0.18) is planted but laggy. **Joint damping 0.2** holds idle best (0.0 shakes, 0.4 drifts).
+- **Foot contact must stay soft** (`mu 1.2 / kp 1e5 / kd 2.0`); the reference's stiff values
   destabilize this robot.
 
 ### WSL2 Gazebo GUI (gzclient)
-- **gzclient is unreliable on this WSL2** — the world renders but live model/sensor updates
-  don't sync (robot looks missing, lidar rays don't show, the Models tree is empty). Log
-  spams `Dropped Escape call with ulEscapeCode` (WSL2 d3d12 GL passthrough dropping calls).
-- The **simulation (gzserver) is fine** — RViz, SLAM, and `/odom/ground_truth` all confirm
-  the robot is really there and moving.
-- **Fix:** run with `gui:=false` and work in RViz. If you really need the Gazebo window,
-  `LIBGL_ALWAYS_SOFTWARE=1 ros2 launch …` uses a more stable (slower) GL path.
+- **gzclient is unreliable on this WSL2** — the world renders but live model/sensor updates don't
+  sync (robot looks missing, lidar rays don't show, Models tree empty), spamming
+  `Dropped Escape call with ulEscapeCode` (WSL2 d3d12 GL passthrough dropping calls).
+- The **simulation (gzserver) is fine** — RViz, SLAM, and `/odom/ground_truth` confirm the robot
+  is really there and moving. **Fix:** run `gui:=false` and work in RViz. If you truly need the
+  window, `LIBGL_ALWAYS_SOFTWARE=1 ros2 launch …` uses a more stable (slower) GL path.
 
-### Leftover/zombie processes
-- Failing to fully kill a previous launch leaves **duplicate controllers / a second Gazebo**,
-  which fight over topics → robot freezes or behaves erratically.
-- **TF_OLD_DATA flood at a *frozen* timestamp** = gzserver died, the sim clock stopped, and
-  the surviving nodes keep re-stamping TF at that old time. Kill the launch and restart.
-- Clean-slate kill:
+### Leftover / zombie processes
+- A partially-killed launch leaves **duplicate controllers / a second Gazebo** fighting over
+  topics → the robot freezes or acts erratically. A **`TF_OLD_DATA` flood at a frozen timestamp**
+  means gzserver died and surviving nodes keep re-stamping TF at the old sim time — restart.
+- Clean-slate kill, then verify `pgrep gzserver` is empty before relaunching:
   ```bash
   pkill -9 -f 'gzserver|gzclient|quadruped_controller_node|state_estimation_node|ekf_node|async_slam_toolbox|rviz2'
   ```
-  Verify with `pgrep gzserver` (empty = clean) before relaunching.
 
 ### Nav2
-- **cmd_vel wiring:** `controller_server → /cmd_vel_nav → velocity_smoother → /cmd_vel`, and
-  CHAMP's controller subscribes to `/cmd_vel`, so a Nav2 goal drives the robot directly.
-- **Planner found no path / "GridBased failed":** set `track_unknown_space: false` so Nav2
-  plans into not-yet-mapped space, and align DWB velocity limits to the gait (0.3 / 0.5).
-- **"No valid trajectories out of 419 / BaseObstacle hits obstacle"** = the robot's footprint
-  is treated as in-collision in the tight apartment. Shrink `robot_radius` and
-  `inflation_radius` (currently 0.16) so it fits doorways/clutter.
-- SLAM + Nav2 run together — slam_toolbox provides the map and `map→odom`; Nav2 uses the
-  navigation servers only (no map_server/AMCL).
+- **cmd_vel wiring:** `controller_server → /cmd_vel_nav → velocity_smoother → /cmd_vel`, and CHAMP
+  subscribes to `/cmd_vel`, so a Nav2 goal drives the robot directly.
+- **"GridBased failed" / no path:** set `track_unknown_space: false` so Nav2 plans into
+  not-yet-mapped space, and align DWB velocity limits to the gait (0.3 / 0.5).
+- **"No valid trajectories / BaseObstacle hits obstacle":** the footprint reads as in-collision in
+  the tight apartment — shrink `robot_radius` and `inflation_radius` (currently 0.16) to fit
+  doorways and clutter.
 
 ---
 
-## Key tuning knobs
+## Key Tuning Knobs
 
 | File | Knob | Note |
 |---|---|---|
@@ -177,9 +251,17 @@ project memory under `.claude/projects/.../memory/`.
 | `quadbot_config/config/autonomy/slam.yaml` | slam_toolbox params | mapping |
 | `quadbot_config/config/autonomy/navigation.yaml` | DWB limits, `robot_radius`, `inflation_radius`, `track_unknown_space` | navigation |
 
-## Known limitations
+## Known Limitations
 
 - Gazebo GUI (gzclient) unreliable on WSL2 → use `gui:=false` + RViz.
-- The apartment world is tight; Nav2 needs the small footprint/inflation above to plan.
-- Locomotion traction can be marginal (occasional walk-in-place); check
-  `/odom/ground_truth` actually moves when driving.
+- The apartment world is tight; Nav2 needs the small footprint / inflation above to plan.
+- Locomotion traction can be marginal (occasional walk-in-place) — check `/odom/ground_truth`
+  actually moves when driving.
+
+---
+
+<div align="center">
+
+*Built by [Ibrahim Zantout](https://github.com/IbrahimZantoutt) — quadruped locomotion, SLAM & navigation in ROS 2.*
+
+</div>

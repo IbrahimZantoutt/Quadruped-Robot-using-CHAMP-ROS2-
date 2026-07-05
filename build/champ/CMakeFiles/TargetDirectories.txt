@@ -1,9 +1,0 @@
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/uninstall.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/champ_uninstall.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/test.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/edit_cache.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/rebuild_cache.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/list_install_components.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/install.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/install/local.dir
-/home/ibrahim/ChampQuadbot/build/champ/CMakeFiles/install/strip.dir

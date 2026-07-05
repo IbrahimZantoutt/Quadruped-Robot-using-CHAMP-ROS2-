@@ -1,9 +1,0 @@
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/uninstall.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/champ_teleop_uninstall.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/test.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/edit_cache.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/rebuild_cache.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/list_install_components.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/install.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/install/local.dir
-/home/ibrahim/ChampQuadbot/build/champ_teleop/CMakeFiles/install/strip.dir

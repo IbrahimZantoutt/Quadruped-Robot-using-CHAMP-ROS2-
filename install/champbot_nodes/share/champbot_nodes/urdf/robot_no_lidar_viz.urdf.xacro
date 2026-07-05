@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<!-- robot.urdf.xacro with the lidar blue scan rays hidden (lidar_visualize=false) -->
-<robot name="quadbot" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:property name="lidar_visualize" value="false"/>
-  <xacro:include filename="$(find champbot_nodes)/urdf/robot.urdf.xacro"/>
-</robot>
