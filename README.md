@@ -41,7 +41,7 @@ A hand-modeled 12-DOF quadruped walks itself to any goal you click in RViz — C
 ### Quadbot URDF model
 
 <!-- Paste a screenshot of the Quadbot URDF (RViz RobotModel) here — drag-drop the file into GitHub's editor to get the <img ... /> tag. -->
-<img width="100%" alt="12-DOF quadbot URDF in RViz" src="PASTE_URDF_IMAGE_URL_HERE" />
+<img width="100%" alt="12-DOF quadbot URDF in RViz" src="https://github.com/user-attachments/assets/7dd05895-9856-43b3-9235-5f13c7bf3c1e" />
 
 </td>
 </tr>
